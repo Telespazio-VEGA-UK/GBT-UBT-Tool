@@ -429,23 +429,28 @@ class Calculator {
                     }
                 }
             }
+            // Old code where threshold position was not interpolated (i.e. the cell where intensity > threshold/extent)
+            //double pixelAcrossDistance = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom] - acrossTrackAngleArray[top];
+            //double pixelAlongDistance = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right] - alongTrackAngleArray[left];
 
-//            double pixelAcrossDistance = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom] - acrossTrackAngleArray[top];
-//            double pixelAlongDistance = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right] - alongTrackAngleArray[left];
-
+            
+            // New code that interpolates for threshold between array cells
+            
             double bottomDistance_1 = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom];
             double bottomDistance_2 = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom+1];
+            double bottomDistance = linearInterp(bottom_extent_1, bottom_extent_2, bottomDistance_1, bottomDistance_2, extent);
+            
             double topDistance_1 = acrossTrackAngleArray[top];
             double topDistance_2 = acrossTrackAngleArray[top-1];
+            double topDistance =linearInterp(top_extent_1, top_extent_2, topDistance_1, topDistance_2, extent);
+            
             double rightDistance_1 = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right];
             double rightDistance_2 = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right+1];
+            double rightDistance = linearInterp(right_extent_1, right_extent_2, rightDistance_1, rightDistance_2, extent);
+            
             double leftDistance_1 = alongTrackAngleArray[left];
             double leftDistance_2 = alongTrackAngleArray[left-1];
-            
-            double bottomDistance = bottomDistance_1 + ((bottomDistance_2-bottomDistance_1)*((0.1 - bottom_extent_1)/(bottom_extent_2 - bottom_extent_1)));
-            double topDistance = topDistance_1 + ((topDistance_2-topDistance_1)*((0.1 - top_extent_1)/(top_extent_2 - top_extent_1)));
-            double rightDistance = rightDistance_1 + ((rightDistance_2-rightDistance_1)*((0.1 - right_extent_1)/(right_extent_2 - right_extent_1)));
-            double leftDistance = leftDistance_1 + ((leftDistance_2-leftDistance_1)*((0.1 - left_extent_1)/(left_extent_2 - left_extent_1)));
+            double leftDistance = linearInterp(left_extent_1, left_extent_2, leftDistance_1, leftDistance_2, extent);
             
             double pixelAcrossDistance = bottomDistance - topDistance;
             double pixelAlongDistance = rightDistance - leftDistance;
@@ -458,6 +463,11 @@ class Calculator {
                 pixelDimensions[3] = pixelAcrossDistance;
             }
         }
+    }
+    
+    private static double linearInterp(double x0, double x1, double y0, double y1, double x){
+        double y = y0 + ((y1-y0)*((x - x0)/(x1 - x0)));
+        return y;
     }
 
     public static void getConstantPixelProjection(InputParameters parameters, List<List<Double>> pixelProjectionMap) {
