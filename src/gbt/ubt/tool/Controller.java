@@ -89,7 +89,7 @@ public class Controller {
      * args[8] = boolean to apply topographic corrections to tie points
      * args[9] = distance (image coordinates) pixel can be from tie-point to have topo correction applied
      * args[11] = optional argument to convert pixel ix, iy
-     * args[12]= optional argument used with args[8] to convert array of pixels [ix,iy], [jx,jy]
+     * args[12]= optional argument used with args[11] to convert array of pixels [ix,iy], [jx,jy]
      */
     private static InputParameters parameters;
 
