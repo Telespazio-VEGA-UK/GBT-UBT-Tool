@@ -18,13 +18,13 @@
  * along with AATSR GBT-UBT-Tool.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package gbt.ubt.tool;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +36,12 @@ import java.util.List;
  * Contact: alasdhair(dot)beaton(at)telespazio(dot)com
  *
  */
- public class InputParameters {
-     /*
-      * This class reads in the input parameters and stores them for use in computation
-      * This class also reads in the raw FOV data and regrids it using adapted IDL code provided by RAL.
-      */
-     
+public class InputParameters {
+    /*
+     * This class reads in the input parameters and stores them for use in computation
+     * This class also reads in the raw FOV data and regrids it using adapted IDL code provided by RAL.
+     */
+
     public int firstForwardPixel;
     public int firstNadirPixel;
     public String inputFileLocation;
@@ -64,7 +64,7 @@ import java.util.List;
     public boolean cornerReferenceFlag;
     public boolean topographicFlag;
     public double topographyHomogenity;
-    
+
     public InputParameters() {
         alongTrackAngle = new double[31 * 31];
         acrossTrackAngle = new double[31 * 31];
@@ -84,12 +84,12 @@ import java.util.List;
         parseRawIFOV(this.FOVMeasurementFileLocation);
         this.cornerReferenceFlag = true;
         String referencePoint = String.valueOf(args[7]);
-        if (referencePoint.equalsIgnoreCase("centre")){
+        if (referencePoint.equalsIgnoreCase("centre")) {
             this.cornerReferenceFlag = false;
         }
         this.topographicFlag = false;
         String topography = String.valueOf(args[8]);
-        if (topography.equalsIgnoreCase("TRUE")){
+        if (topography.equalsIgnoreCase("TRUE")) {
             this.topographicFlag = true;
         }
         this.topographyHomogenity = Double.valueOf(String.valueOf(args[9]));
@@ -380,9 +380,26 @@ import java.util.List;
 
         double[] regridIfov = new double[31 * 31];
 
-        System.out.println("Resampling IFOV using Nearest Neighbour Interpolation!");
+        System.out.println("Resampling IFOV using Bilinear Interpolation");
 
-        /* Simple nearest neighbour interpolation scheme */
+        //Reallocated arrays for "easier" interpolation
+        double[][] reallocatedIFOV = new double[countX+1][countY+1];// IFOV matrix is x,y packed
+        for (int i = 0; i < countX+1; i++) {
+            for (int j = 0; j < countY+1; j++) {
+                reallocatedIFOV[i][j] = ifov[j + (i * (countX + 1))];
+            }
+        }
+
+        double[] reallocatedFovArrayX = new double[countX + 1];
+        double[] reallocatedFovArrayY = new double[countY + 1];
+
+        System.arraycopy(fovArrayX, 0, reallocatedFovArrayX, 0, countX + 1);
+
+        for (int j = 0; j < countY + 1; j++) {
+            reallocatedFovArrayY[j] = fovArrayY[j * (countY + 1)];
+        }
+
+        /* Bilinear interpolation scheme */
         for (int i = 0; i < 31; i++) {
             for (int j = 0; j < 31; j++) {
                 double X = axisX[i];
@@ -390,8 +407,7 @@ import java.util.List;
                 int solvedX = 0;
                 int solvedY = 0;
                 for (int m = 0; m < countX + 1; m++) {
-
-                    if (fovArrayX[m] >= X) {
+                    if (reallocatedFovArrayX[m] >= X) {
                         solvedX = m;
                     } else {
                         break;
@@ -399,18 +415,43 @@ import java.util.List;
                 }
 
                 for (int n = 0; n < countY + 1; n++) {
-                    if (fovArrayY[n * (countY + 1)] >= Y) {
+                    if (reallocatedFovArrayY[n] >= Y) {
                         solvedY = n;
                     } else {
                         break;
                     }
                 }
-                int indxX = (countX - solvedX);
-                int indxY = (countY - solvedY);
-                regridIfov[i + (j * 31)] = ifov[indxX + (indxY * (countX + 1))];
-            }
+                double minX = reallocatedFovArrayX[reallocatedFovArrayX.length-1];
+                double x1;
+                double x2;
+                if (X < minX){
+                    // Need to extrapolate in X
+                    x1 =reallocatedFovArrayX[reallocatedFovArrayX.length-2];
+                    x2 =reallocatedFovArrayX[reallocatedFovArrayX.length-1];
+                    solvedX --;
+                } else{
+                    x1 = reallocatedFovArrayX[solvedX];
+                    x2 = reallocatedFovArrayX[solvedX + 1];
+                }
+                double y1;
+                double y2;
+                double minY = reallocatedFovArrayY[reallocatedFovArrayY.length-1];
+                if (Y < minY){
+                    // Need to extrapolate in Y
+                    y1 =reallocatedFovArrayY[reallocatedFovArrayY.length-2];
+                    y2 =reallocatedFovArrayY[reallocatedFovArrayY.length-1];
+                    solvedY --;
+                } else{
+                    y1 = reallocatedFovArrayY[solvedY];
+                    y2 = reallocatedFovArrayY[solvedY + 1];
+                }
+                double f11 = reallocatedIFOV[solvedX][solvedY];
+                double f21 = reallocatedIFOV[solvedX+1][solvedY];
+                double f12 = reallocatedIFOV[solvedX][solvedY+1];
+                double f22 = reallocatedIFOV[solvedX+1][solvedY+1];
+                regridIfov[j + (i * 31)] = bilinearInterp(x1, x2, y1, y2, f11, f12, f21, f22, X, Y);
+                }
         }
-
         /* copy the ifov and dimensions to 1D arrays */
         for (int i = 0; i < 31; i++) {
             for (int j = 0; j < 31; j++) {
@@ -419,5 +460,15 @@ import java.util.List;
                 this.ifov1D[i + (j * 31)] = regridIfov[i + (j * 31)];
             }
         }
+    }
+    
+    private static double bilinearInterp(double x1, double x2, double y1, double y2, double f11, double f12, double f21, double f22, double x, double y) {
+        // Linear interpolation in x
+        double fxy1 = (((x2 - x) / (x2 - x1)) * f11) + (((x - x1) / (x2 - x1)) * f21);
+        double fxy2 = (((x2 - x) / (x2 - x1)) * f12) + (((x - x1) / (x2 - x1)) * f22);
+
+        // Linear interpolation in y
+        double fxy = (((y2 - y) / (y2 - y1)) * fxy1) + (((y - y1) / (y2 - y1)) * fxy2);
+        return fxy;
     }
 }
