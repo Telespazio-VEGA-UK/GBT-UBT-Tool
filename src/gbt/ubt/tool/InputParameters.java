@@ -113,10 +113,10 @@ public class InputParameters {
                 yStart = values2.lastIndexOf(",");
                 yStop = values2.lastIndexOf("]");
                 yValue = values2.substring(yStart + 1, yStop);
-                this.y2 = Integer.valueOf(yValue);
+                this.y2 = Integer.valueOf(yValue) + 1;
                 xStart = values2.lastIndexOf("[");
                 xValue = values2.substring(xStart + 1, yStart);
-                this.x2 = Integer.valueOf(xValue);
+                this.x2 = Integer.valueOf(xValue) + 1;
             }
         } else {
             this.subsetFlag = false;
