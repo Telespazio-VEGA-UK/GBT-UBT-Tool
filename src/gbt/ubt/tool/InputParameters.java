@@ -24,8 +24,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -148,14 +149,27 @@ public class InputParameters {
                 byte[] forwardPixelNumber = {data[1757], data[1758], data[1759], data[1760]};
 
                 // Convert the byte arrays to integers
-                this.firstNadirPixel = (nadirPixelNumber[0] << 24) & 0xff000000 | (nadirPixelNumber[1] << 16) & 0xff0000 | (nadirPixelNumber[2] << 8) & 0xff00 | (nadirPixelNumber[3] << 0) & 0xff;
-                this.firstForwardPixel = (forwardPixelNumber[0] << 24) & 0xff000000 | (forwardPixelNumber[1] << 16) & 0xff0000 | (forwardPixelNumber[2] << 8) & 0xff00 | (forwardPixelNumber[3] << 0) & 0xff;
+                boolean littleEndianFlag = false;
+                if (L1BCharacterisationFileLocation.contains("AT1") || L1BCharacterisationFileLocation.contains("AT2")){
+                    littleEndianFlag = true;
+                }
+                this.firstNadirPixel = byteArrayToInt(nadirPixelNumber, littleEndianFlag);
+                this.firstForwardPixel = byteArrayToInt(forwardPixelNumber, littleEndianFlag);
                 System.out.println("First Nadir Pixel is: " + this.firstNadirPixel + " and First Forward Pixel is: " + this.firstForwardPixel);
             }
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             System.exit(1);
         }
+    }
+
+    private static int byteArrayToInt(byte[] b, boolean littleEndianFlag) {
+        final ByteBuffer bb = ByteBuffer.wrap(b);
+        bb.order(ByteOrder.BIG_ENDIAN);
+        if (littleEndianFlag){
+            bb.order(ByteOrder.LITTLE_ENDIAN);
+        }
+        return bb.getInt();
     }
 
     private void parseRawIFOV(String FOVMeasurementFileLocation) {
@@ -383,9 +397,9 @@ public class InputParameters {
         System.out.println("Resampling IFOV using Bilinear Interpolation");
 
         //Reallocated arrays for "easier" interpolation
-        double[][] reallocatedIFOV = new double[countX+1][countY+1];// IFOV matrix is x,y packed
-        for (int i = 0; i < countX+1; i++) {
-            for (int j = 0; j < countY+1; j++) {
+        double[][] reallocatedIFOV = new double[countX + 1][countY + 1];// IFOV matrix is x,y packed
+        for (int i = 0; i < countX + 1; i++) {
+            for (int j = 0; j < countY + 1; j++) {
                 reallocatedIFOV[i][j] = ifov[j + (i * (countX + 1))];
             }
         }
@@ -421,36 +435,36 @@ public class InputParameters {
                         break;
                     }
                 }
-                double minX = reallocatedFovArrayX[reallocatedFovArrayX.length-1];
+                double minX = reallocatedFovArrayX[reallocatedFovArrayX.length - 1];
                 double x1;
                 double x2;
-                if (X < minX){
+                if (X < minX) {
                     // Need to extrapolate in X
-                    x1 =reallocatedFovArrayX[reallocatedFovArrayX.length-2];
-                    x2 =reallocatedFovArrayX[reallocatedFovArrayX.length-1];
-                    solvedX --;
-                } else{
+                    x1 = reallocatedFovArrayX[reallocatedFovArrayX.length - 2];
+                    x2 = reallocatedFovArrayX[reallocatedFovArrayX.length - 1];
+                    solvedX--;
+                } else {
                     x1 = reallocatedFovArrayX[solvedX];
                     x2 = reallocatedFovArrayX[solvedX + 1];
                 }
                 double y1;
                 double y2;
-                double minY = reallocatedFovArrayY[reallocatedFovArrayY.length-1];
-                if (Y < minY){
+                double minY = reallocatedFovArrayY[reallocatedFovArrayY.length - 1];
+                if (Y < minY) {
                     // Need to extrapolate in Y
-                    y1 =reallocatedFovArrayY[reallocatedFovArrayY.length-2];
-                    y2 =reallocatedFovArrayY[reallocatedFovArrayY.length-1];
-                    solvedY --;
-                } else{
+                    y1 = reallocatedFovArrayY[reallocatedFovArrayY.length - 2];
+                    y2 = reallocatedFovArrayY[reallocatedFovArrayY.length - 1];
+                    solvedY--;
+                } else {
                     y1 = reallocatedFovArrayY[solvedY];
                     y2 = reallocatedFovArrayY[solvedY + 1];
                 }
                 double f11 = reallocatedIFOV[solvedX][solvedY];
-                double f21 = reallocatedIFOV[solvedX+1][solvedY];
-                double f12 = reallocatedIFOV[solvedX][solvedY+1];
-                double f22 = reallocatedIFOV[solvedX+1][solvedY+1];
+                double f21 = reallocatedIFOV[solvedX + 1][solvedY];
+                double f12 = reallocatedIFOV[solvedX][solvedY + 1];
+                double f22 = reallocatedIFOV[solvedX + 1][solvedY + 1];
                 regridIfov[j + (i * 31)] = bilinearInterp(x1, x2, y1, y2, f11, f12, f21, f22, X, Y);
-                }
+            }
         }
         /* copy the ifov and dimensions to 1D arrays */
         for (int i = 0; i < 31; i++) {
@@ -461,7 +475,7 @@ public class InputParameters {
             }
         }
     }
-    
+
     private static double bilinearInterp(double x1, double x2, double y1, double y2, double f11, double f12, double f21, double f22, double x, double y) {
         // Linear interpolation in x
         double fxy1 = (((x2 - x) / (x2 - x1)) * f11) + (((x - x1) / (x2 - x1)) * f21);
