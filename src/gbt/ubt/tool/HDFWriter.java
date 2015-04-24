@@ -144,7 +144,7 @@ class HDFWriter {
                     if (parameters.singlePixelFlag) {
                         attrValue[0] = "[" + String.valueOf(parameters.x1) + "," + String.valueOf(parameters.y1) + "]";
                     } else {
-                        attrValue[0] = "[" + String.valueOf(parameters.x1) + "," + String.valueOf(parameters.y1) + "] [" + String.valueOf(parameters.x2) + "," + String.valueOf(parameters.y2) + "]";
+                        attrValue[0] = "[" + String.valueOf(parameters.x1) + "," + String.valueOf(parameters.y1) + "] [" + String.valueOf(parameters.x2 -1) + "," + String.valueOf(parameters.y2 -1) + "]";
                     }
 
                     Attribute attr6 = new Attribute(attrName, attrType, attrDims, attrValue);
