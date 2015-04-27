@@ -434,26 +434,34 @@ class Calculator {
             //double pixelAlongDistance = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right] - alongTrackAngleArray[left];
 
             
-            // New code that interpolates for threshold between array cells
+            // Old code that interpolates for threshold between array cells using linear interpolation
             
-            double bottomDistance_1 = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom];
-            double bottomDistance_2 = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom+1];
-            double bottomDistance = linearInterp(bottom_extent_1, bottom_extent_2, bottomDistance_1, bottomDistance_2, extent);
+//            double bottomDistance_1 = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom];
+//            double bottomDistance_2 = acrossTrackAngleArray[(maxAcrossTrackIndx - minAcrossTrackIndx + 1) - bottom+1];
+//            double bottomDistance = linearInterp(bottom_extent_1, bottom_extent_2, bottomDistance_1, bottomDistance_2, extent);
+//            
+//            double topDistance_1 = acrossTrackAngleArray[top];
+//            double topDistance_2 = acrossTrackAngleArray[top-1];
+//            double topDistance = linearInterp(top_extent_1, top_extent_2, topDistance_1, topDistance_2, extent);
+//            
+//            double rightDistance_1 = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right];
+//            double rightDistance_2 = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right+1];
+//            double rightDistance = linearInterp(right_extent_1, right_extent_2, rightDistance_1, rightDistance_2, extent);
+//            
+//            double leftDistance_1 = alongTrackAngleArray[left];
+//            double leftDistance_2 = alongTrackAngleArray[left-1];
+//            double leftDistance = linearInterp(left_extent_1, left_extent_2, leftDistance_1, leftDistance_2, extent);
+//            
+//            double pixelAcrossDistance = bottomDistance - topDistance;
+//            double pixelAlongDistance = rightDistance - leftDistance;
             
-            double topDistance_1 = acrossTrackAngleArray[top];
-            double topDistance_2 = acrossTrackAngleArray[top-1];
-            double topDistance =linearInterp(top_extent_1, top_extent_2, topDistance_1, topDistance_2, extent);
+            // New code that interpolates for threshold by generating a contour around FOV extent in array
             
-            double rightDistance_1 = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right];
-            double rightDistance_2 = alongTrackAngleArray[(maxAlongTrackIndx - minAlongTrackIndx + 1) - right+1];
-            double rightDistance = linearInterp(right_extent_1, right_extent_2, rightDistance_1, rightDistance_2, extent);
-            
-            double leftDistance_1 = alongTrackAngleArray[left];
-            double leftDistance_2 = alongTrackAngleArray[left-1];
-            double leftDistance = linearInterp(left_extent_1, left_extent_2, leftDistance_1, leftDistance_2, extent);
-            
-            double pixelAcrossDistance = bottomDistance - topDistance;
-            double pixelAlongDistance = rightDistance - leftDistance;
+            FOVContour contouredExtent = new FOVContour();
+            contouredExtent.createContour(maxAcrossTrackIndx, maxAlongTrackIndx, minAcrossTrackIndx, minAlongTrackIndx, FOVResponse, extent);
+            contouredExtent.getExtent(acrossTrackAngleArray, alongTrackAngleArray);
+            double pixelAcrossDistance = contouredExtent.pixelAcrossDistance;
+            double pixelAlongDistance = contouredExtent.pixelAlongDistance;
             
             if (k == 0) {
                 pixelDimensions[0] = pixelAlongDistance;
@@ -465,7 +473,7 @@ class Calculator {
         }
     }
     
-    private static double linearInterp(double x0, double x1, double y0, double y1, double x){
+    public static double linearInterp(double x0, double x1, double y0, double y1, double x){
         double y = y0 + ((y1-y0)*((x - x0)/(x1 - x0)));
         return y;
     }
