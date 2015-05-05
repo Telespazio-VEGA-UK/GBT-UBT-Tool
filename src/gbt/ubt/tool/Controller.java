@@ -378,10 +378,12 @@ public class Controller {
 //            File filename = new File((String) finalTask.get());
 //            filename.deleteOnExit();
 
-            HDFWriter.writeDataTofile(parameters, pixelPositions, maxX, maxY, minX, minY);
-
-
-
+            if (parameters.outputFileLocation.contains(".h5")){
+                HDFWriter.writeDataTofile(parameters, pixelPositions, maxX, maxY, minX, minY);
+            } else{
+                NetCDF4Writer.writeDataTofile(parameters, pixelPositions, maxX, maxY, minX, minY);
+            }
+            
         } catch (IOException | RuntimeException ex) {
             System.out.println(ex.getCause());
             System.out.println(ex.fillInStackTrace());
