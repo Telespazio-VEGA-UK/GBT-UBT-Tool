@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -65,6 +66,8 @@ public class InputParameters {
     public boolean cornerReferenceFlag;
     public boolean topographicFlag;
     public double topographyHomogenity;
+    public String inputString;
+    public String toolVersion;
 
     public InputParameters() {
         alongTrackAngle = new double[31 * 31];
@@ -84,6 +87,7 @@ public class InputParameters {
         parseCharacterisationFile(this.L1BCharacterisationFileLocation);
         parseRawIFOV(this.FOVMeasurementFileLocation);
         this.cornerReferenceFlag = true;
+        this.inputString = Arrays.toString(args);
         String referencePoint = String.valueOf(args[7]);
         if (referencePoint.equalsIgnoreCase("centre")) {
             this.cornerReferenceFlag = false;

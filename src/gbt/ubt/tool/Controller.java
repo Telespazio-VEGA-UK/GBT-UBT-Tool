@@ -102,7 +102,7 @@ public class Controller {
         // Parse the inputs and set up the activity
         parameters = new InputParameters();
         parameters.parse(args);
-
+        parameters.toolVersion = "1.4b";
         processProduct();
 
         System.out.println("Processing Complete");
