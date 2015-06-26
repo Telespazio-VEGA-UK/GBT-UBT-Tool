@@ -64,24 +64,25 @@ public class Controller {
      * INPUTS
      * ATSR level 1B product (Envisat Data Product (.N1) format)
      * L1B Characterisation File (binary)
-     * FOV Calibration Measurement File (ASCII (.SFV) format)
+     * AATSR FOV Calibration Measurement File (ASCII (.SFV) format)
      * 
      * OUTPUTS
-     * Extracted un-gridded geolocation, acquisition time & channel Field of View Map (HDF5 (.h5) format)
+     * Extracted un-gridded geolocation, acquisition time & channel Field of View Map (HDF5 (.h5) or NetCDF4 CF (.nc) formats)
      * 
-     * Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-Relation> OPT<[ix,iy]> OPT<[jx,jy]>
-     * Example: java -jar GBT-UBT-Tool.jar "./l1b_sample.n1" "./ATS_CH1_AXVIEC20120615_105541_20020301_000000_20200101_000000" "./FOV_measurements/10310845.SFV" "./output.h5" "1000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "[0,0]" "[511,42000]"
+     * Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file(.h5/.nc)> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-Relation> OPT<[ix,iy]> OPT<[jx,jy]>
+     * Example: java -jar GBT-UBT-Tool.jar "./l1b_sample.n1" "./ATS_CH1_AXVIEC20120615_105541_20020301_000000_20200101_000000" "./FOV_measurements/10310845.SFV" "./output.nc" "1000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "[0,0]" "[511,2559]"
      * 
      * Uses the BEAM Java API 4.11, available @ (http://www.brockmann-consult.de/cms/web/beam/releases)
      * Uses the Java HDF5 Interface (JHI5), available @ (http://www.hdfgroup.org/hdf-java-html/)
+     * Uses the Java NetCDF Interface, available @ (http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/documentation.htm)
      */
 
     /**
      * @param args the command line arguments: 
      * args[0] = (A)ATSR-1/2 product 
      * args[1] = L1B characterisation file 
-     * args[2] = FOV calibration measurement file
-     * args[3] = output file 
+     * args[2] = AATSR FOV calibration measurement file
+     * args[3] = output file (either hdf5 or netcdf4 cf depending on file extension)
      * args[4] = rows assigned per CPU thread 
      * args[5] = extent of IFOV to report as distance in pixel projection 
      * args[6] = boolean to allow user to trim image rows of product where no ADS available
@@ -94,7 +95,7 @@ public class Controller {
     private static InputParameters parameters;
 
     public static void main(String[] args) {
-        System.out.println("AATSR Pixel Ungridding Tool Version 1.4b");
+        System.out.println("AATSR Pixel Ungridding Tool Version 1.5");
 
         //Check that the input array is the right length
         checkInputs(args);
@@ -102,7 +103,7 @@ public class Controller {
         // Parse the inputs and set up the activity
         parameters = new InputParameters();
         parameters.parse(args);
-        parameters.toolVersion = "1.4b";
+        parameters.toolVersion = "1.5";
         processProduct();
 
         System.out.println("Processing Complete");
@@ -113,7 +114,7 @@ public class Controller {
     private static void checkInputs(String[] args) {
         if (args.length < 10 || args.length > 12) {
             System.out.println("Check Program Inputs");
-            System.out.println("Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-relation> OPT<[ix,iy]> OPT<[jx,jy]>");
+            System.out.println("Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file(.h5/.nc)> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-relation> OPT<[ix,iy]> OPT<[jx,jy]>");
             System.exit(1);
         }
     }
