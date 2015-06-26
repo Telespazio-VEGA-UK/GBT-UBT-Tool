@@ -1,46 +1,53 @@
-AATSR Pixel Ungridding Tool Version 1.4b      17/02/2015      BETA RELEASE
+AATSR Pixel Ungridding Tool Version 1.5      26/06/2015
 
 --------------------------------------------------------------------------------
 QUICKSTART 
 --------------------------------------------------------------------------------
-Java tool that ungrids AATSR L1B products and extracts geolocation and pixel 
+Java tool that ungrids ATSR L1B products and extracts geolocation and pixel 
 field of view data 
 
 INPUTS 
--AATSR level 1B product (Envisat Data Product (.N1) format) 
+-(A)ATSR(-1/2) level 1B product (Envisat Data Product (.N1) format) 
 -L1B Characterisation File (ascii & binary format) 
--FOV Calibration Measurement File (ASCII (.SFV) format) 
+-AATSR FOV Calibration Measurement File (ASCII (.SFV) format) 
 
 OUTPUTS 
 -Extracted un-gridded geolocation, acquisition time & channel Field of View Map 
- (HDF5 (.h5) format) 
+ (HDF5 (.h5) format) alternatively including measurement data (netCDF4 CF (.nc)
+ format.
 
-USAGE: gbt2ubt <aatsr-product> <l1b-characterisation-file> ...
+USAGE: gbt2ubt <(a)atsr(-1/2)-product> <l1b-characterisation-file> ...
        <fov-measurement-file> <output-file> <rows-per-CPU-thread> ...
        <IFOV-reporting-extent-fraction> <Trim-end-of-product> ... 
        <Pixel Reference> <Topography> <Topo_Relation (km)> OPT<[ix,iy]>... 
        OPT<[jx,jy]> 
 
 EXAMPLE: java -jar -d64 -Xmx8g GBT-UBT-Tool.jar "./l1b_sample.n1" ...
-         "./ATS_CH1_AXVIEC20120615" "./FOV_measurements/10310845.SFV" ...
-         "./output.h5" "1000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "[0,0]" ...
+         "./CH1_Files/ATS_CH1_AX" "./FOV_measurements/10310845.SFV" ...
+         "./output.nc" "1000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "[0,0]" ...
          "[511,511]" 
 
-Uses the BEAM Java API 4.11, available @ 
-(http://www.brockmann-consult.de/cms/web/beam/releases) 
+Uses the BEAM Java API 4.11, 
+available @ (http://www.brockmann-consult.de/cms/web/beam/releases) 
 
-Uses the Java HDF5 
-Interface (JHI5), available @ (http://www.hdfgroup.org/hdf-java-html/) 
+Uses the Java HDF5 Interface (JHI5), 
+available @ (http://www.hdfgroup.org/hdf-java-html/) 
 
-Distribution includes Windows 64bit java HDF5 libraries, pre-built binaries for 
+Uses the Java NetCDF Interface, 
+available @ (http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/documentation.htm)
+
+Distribution includes Windows 64bit HDF5 libraries, pre-built binaries for 
 other platforms are available @ 
 (http://www.hdfgroup.org/products/java/release/download.html) 
 
+Distribution includes Windows 64bit netCDF4 libraries, source code for 
+other platforms are available @ 
+(https://www.unidata.ucar.edu/downloads/netcdf/index.jsp)
 --------------------------------------------------------------------------------
 DESCRIPTION 
 --------------------------------------------------------------------------------
-This tool parses an AATSR ATS_TOA_1P product, then for each pixel in the Nadir 
-and Forward views: 
+This tool parses an (A)ATSR(-1/2_ ATS_TOA_1P product, then for each pixel in the
+ Nadir and Forward views: 
 
 1) Computes the original geolocation of the measurement (UBT) using methodology 
 taken from a Technical Note by Andrew Birks of Rutherford Appelton Laboratory 
@@ -57,17 +64,18 @@ as opposed to the usual per scan basis. Note that there appears to be a
 systematic bias of +0.15 seconds in the acquisition time retrieval. This is
 hinted at in the Andrew Birks TN.
 
-3) Computes the extent (size) of the pixel FOV projected onto a spherical Earth 
-surface for both along and across track directions. A threshold parameter is 
-used to return the extent of the projection for a given FOV intensity. This
+3) Computes the extent (size) of AATSR pixel FOVs projected onto a spherical 
+Earth surface for both along and across track directions. A threshold parameter 
+is used to return the extent of the projection for a given FOV intensity. This
 computation facilitates better characterisation of the instrument measurements,
 adding a spatial coverage element to the original geolocation. The algorithms to
 compute the FOV projection were extracted from IDL code provided by Dave Smith 
 (RAL). Please see section FOV Computation Algorithm for more details. 
 
-4) Outputs the results in array datasets within an HDF5 format file. 
+4) Outputs the results in array datasets within an HDF5 format file or NetCDF4 
+CF format file.
 
-Output File Structure 
+HDF5 Output File Structure 
 
 <Output_File> <Acquisition_Times> -Forward_Acquisition_Time Unit: MJD2000 (UTC) 
                                   -Nadir_Acquisition_Time 
@@ -82,10 +90,37 @@ Output File Structure
                                   -Nadir_Latitude 
                                   -Nadir_Longitude 
 
+NetCDF4 CF Output File Structure (File is self-describing)
+
+<Output_File> <Acquisition_Times> -Forward_Acquisition_Time Unit: MJD2000 (UTC) 
+                                  -Nadir_Acquisition_Time 
+
+              -crs: coordinate reference system descriptor
+
+              <Flags>             -Cloud_flags_fward Integer representations
+                                  -Cloud_flags_nadir
+                                  -Confid_flags_fward
+                                  -Confid_flags_nadir
+                                  
+              <FOV_Projection>    -Forward_Across_Track Unit: km 
+                                  -Forward_Along_Track 
+                                  -Nadir_Across_Track 
+                                  -Nadir_Along_Track 
+
+              <Geolocation>       -Forward_Latitude Unit: Decimal Degrees 
+                                  -Forward_longitude 
+                                  -Nadir_Latitude 
+                                  -Nadir_Longitude
+
+              <Measurements>      -Brightness Temperatures Unit: K 
+                                  -TOA Reflectance Unit: %
+
+
 Fill Values 
 
 Value for no data (e.g. cosmetic pixel, no ADS available) = -999999.0
 Value for pixels corresponding to scan number <32 = -888888.0
+Value for no data in measurement arrays = -0.02
 
 --------------------------------------------------------------------------------
 FOV COMPUTATION ALGORITHM 
@@ -129,7 +164,7 @@ FILE MANIFEST
                     -11110705.SFV 12um " 
                     -11111716.SFV 3.7um " 
 
--<lib> Various (76) .jar libraries for HDF5 & BEAM 
+-<lib> Various (76) .jar libraries for netCDF4, HDF5 & BEAM 
 
 -<src> Source files for application 
        -Calculator.java Calculates UBT geolocation and projection 
@@ -143,7 +178,12 @@ FILE MANIFEST
         coordinates using TN 
        -ScanAndPixelIndicesExtractor.java Retrieves scan and pixel number
 
--ATS_CH1_AXVIEC20120615 Binary file that contains first pixel numbers 
+-<CH1_Files> L1b Characterisation Files that contains first pixel numbers
+             -ATS_CH1_AX AATSR CH1
+             -AT2_CH1_AX ATSR-2 CH1
+             -AT1_CH1_AX ATSR-1 CH1
+
+-<netCDF 4.3.3.1> NetCDF C library (Win 64 bit)
 
 -GBT-UBT-Tool.jar Java application 
 
@@ -175,8 +215,9 @@ Installation steps are as follows:
 
 1) Download and install a Java Virtual Machine. (Oracle is supported) 
 2) Unzip the application folder to a directory of choice. 
-3) If using a platform other than Windows, grab a suitable pre-built HDF5-Java 
-binary and install. See QUICKSTART above for HDF5 binaries location. 
+3) If using a platform other than Windows, grab a suitable pre-built HDF5-C 
+binary and netCDF4 C source code and install. See QUICKSTART above for HDF5 
+binaries and netCDF4 source code location. 
 
 --------------------------------------------------------------------------------
 OPERATING INSTRUCTIONS 
@@ -234,13 +275,16 @@ OPT<[jx,jy]> will extract a rectangular region of pixels, [ix,iy] represents
 the pixel at the upper left corner of the rectangle, [jx,jy] represents the 
 lower right corner. 
 
-13) Run application by putting file locations and input parameters as Strings ""
+13) Choose HDF5 or netCDF4 CF output through appending either .h5 or .nc to 
+output filename.
+
+14) Run application by putting file locations and input parameters as Strings ""
 after Java command e.g. (where ... represents continuation of same line but 
 should not be typed) >java -d64 -Xmx5g -jar GBT-UBT-Tool.jar ... 
 "./ATS_TOA_1PRUPA20040801_202807_000013052029_00085_12664_0910.N1" ... 
-"./ATS_CH1_AXVIEC20120615_105541_20020301_000000_20200101_000000"... 
-"./FOV_measurements/10310845.SFV" "./ubt_output_12664.h5" "5400" "0.3" "TRUE"...
-"Centre" "FALSE" "0.05" "[30,100]" "[120,300]"
+"./CH1_Files/ATS_CH1_AX" "./FOV_measurements/10310845.SFV" ...
+"./ubt_output_12664.nc" "5400" "0.3" "TRUE" "Centre" "FALSE" "0.05" ... 
+"[30,100]" "[120,300]"
 
 --------------------------------------------------------------------------------
 AUTHORS 
@@ -275,6 +319,12 @@ Software Library and Utilities is provided in the distribution folder as
 "LICENSE_HDF.txt". If this license is missing, see 
 <http://www.hdfgroup.org/ftp/HDF5/current/src/unpacked/COPYING>.
 
+A copy of the Copyright Notice and Statement for UCAR/UNIDATA network Common 
+Data Form (netCDF)
+Software Library and Utilities is provided in the distribution folder as 
+"LICENSE_netCDF.txt". If this license is missing, see 
+<http://www.unidata.ucar.edu/software/netcdf/copyright.html>.
+
 --------------------------------------------------------------------------------
 VERSION CHANGELOG 
 --------------------------------------------------------------------------------
@@ -283,7 +333,8 @@ VERSION CHANGELOG
 1.2a 14/05/2014 Command line region subsetting 
 1.3a 14/05/2014 User option for coordinate reference point (corner/centre) 
 1.4a 22/09/2014 User option to apply topographic corrections to tie-points
-1.4b 30/01/2015	First Beta Release to community (Limited Distribution)
+1.4b 30/01/2015 First Beta Release to community (Limited Distribution)
+1.5  26/06/2015 Public release incorporating beta test feedback
 
 --------------------------------------------------------------------------------
 ACKNOWLEDGEMENTS 
