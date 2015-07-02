@@ -95,7 +95,7 @@ public class Controller {
     private static InputParameters parameters;
 
     public static void main(String[] args) {
-        System.out.println("AATSR Pixel Ungridding Tool Version 1.5");
+        System.out.println("AATSR Pixel Ungridding Tool Version 1.51");
 
         //Check that the input array is the right length
         checkInputs(args);
@@ -103,7 +103,7 @@ public class Controller {
         // Parse the inputs and set up the activity
         parameters = new InputParameters();
         parameters.parse(args);
-        parameters.toolVersion = "1.5";
+        parameters.toolVersion = "1.51";
         processProduct();
 
         System.out.println("Processing Complete");

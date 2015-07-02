@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.esa.beam.framework.dataio.ProductIO;
@@ -162,159 +163,32 @@ public class NetCDF4Writer {
 
             // Measurement
             // Note link between measurement data to flag variables
-            Variable dataVariableNad1200 = dataFile.addVariable(measurement, "btemp nadir 12000nm", DataType.SHORT, dims);
-            dataVariableNad1200.addAttribute(new Attribute("long_name", "Brightness temperature, nadir view (11500-12500 nm)"));
-            dataVariableNad1200.addAttribute(new Attribute("standard_name", "toa_brightness_temperature"));
-            dataVariableNad1200.addAttribute(new Attribute("units", "K"));
-            dataVariableNad1200.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableNad1200.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableNad1200.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableNad1200.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
-            dataVariableNad1200.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableNad1200.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
+            List<String> variableNames = new ArrayList<>(Arrays.asList("btemp_nadir_1200", "btemp_fward_1200", "btemp_nadir_1100", "btemp_fward_1100", "btemp_nadir_0370", "btemp_fward_0370", "reflec_nadir_1600", "reflec_fward_1600", "reflec_nadir_0870", "reflec_fward_0870", "reflec_nadir_0670", "reflec_fward_0670", "reflec_nadir_0550", "reflec_fward_0550"));
+            List<String> longNames = new ArrayList<>(Arrays.asList("Brightness temperature, nadir view (11500-12500 nm)", "Brightness temperature, forward view (11500-12500 nm)", "Brightness temperature, nadir view (10400-11300 nm)", "Brightness temperature, forward view (10400-11300 nm)", "Brightness temperature, nadir view (3505-3895 nm)", "Brightness temperature, forward view (3505-3895 nm)"));
+            longNames.addAll(Arrays.asList("Reflectance, nadir view (1580-1640 nm)", "Reflectance, forward view (1580-1640 nm)", "Reflectance, nadir view (855-875 nm)", "Reflectance, forward view (855-875 nm)", "Reflectance, nadir view (649-669 nm)", "Reflectance, forward view (649-669 nm)", "Reflectance, nadir view (545-565 nm)", "Reflectance, forward view (545-565 nm)"));
 
-            Variable dataVariableFwd1200 = dataFile.addVariable(measurement, "btemp fward 12000nm", DataType.SHORT, dims);
-            dataVariableFwd1200.addAttribute(new Attribute("long_name", "Brightness temperature, forward view (11500-12500 nm)"));
-            dataVariableFwd1200.addAttribute(new Attribute("standard_name", "toa_brightness_temperature"));
-            dataVariableFwd1200.addAttribute(new Attribute("units", "K"));
-            dataVariableFwd1200.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableFwd1200.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableFwd1200.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableFwd1200.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
-            dataVariableFwd1200.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableFwd1200.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
-
-            Variable dataVariableNad1100 = dataFile.addVariable(measurement, "btemp nadir 11000nm", DataType.SHORT, dims);
-            dataVariableNad1100.addAttribute(new Attribute("long_name", "Brightness temperature, nadir view (10400-11300 nm)"));
-            dataVariableNad1100.addAttribute(new Attribute("standard_name", "toa_brightness_temperature"));
-            dataVariableNad1100.addAttribute(new Attribute("units", "K"));
-            dataVariableNad1100.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableNad1100.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableNad1100.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableNad1100.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
-            dataVariableNad1100.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableNad1100.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
-
-            Variable dataVariableFwd1100 = dataFile.addVariable(measurement, "btemp fward 11000nm", DataType.SHORT, dims);
-            dataVariableFwd1100.addAttribute(new Attribute("long_name", "Brightness temperature, forward view (10400-11300 nm)"));
-            dataVariableFwd1100.addAttribute(new Attribute("standard_name", "toa_brightness_temperature"));
-            dataVariableFwd1100.addAttribute(new Attribute("units", "K"));
-            dataVariableFwd1100.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableFwd1100.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableFwd1100.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableFwd1100.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
-            dataVariableFwd1100.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableFwd1100.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
-
-            Variable dataVariableNad370 = dataFile.addVariable(measurement, "btemp nadir 3700nm", DataType.SHORT, dims);
-            dataVariableNad370.addAttribute(new Attribute("long_name", "Brightness temperature, nadir view (3505-3895 nm)"));
-            dataVariableNad370.addAttribute(new Attribute("standard_name", "toa_brightness_temperature"));
-            dataVariableNad370.addAttribute(new Attribute("units", "K"));
-            dataVariableNad370.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableNad370.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableNad370.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableNad370.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
-            dataVariableNad370.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableNad370.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
-
-            Variable dataVariableFwd370 = dataFile.addVariable(measurement, "btemp fward 3700nm", DataType.SHORT, dims);
-            dataVariableFwd370.addAttribute(new Attribute("long_name", "Brightness temperature, forward view (3505-3895 nm)"));
-            dataVariableFwd370.addAttribute(new Attribute("standard_name", "toa_brightness_temperature"));
-            dataVariableFwd370.addAttribute(new Attribute("units", "K"));
-            dataVariableFwd370.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableFwd370.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableFwd370.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableFwd370.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
-            dataVariableFwd370.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableFwd370.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
-
-            Variable dataVariableNad160 = dataFile.addVariable(measurement, "reflec nadir 1600nm", DataType.SHORT, dims);
-            dataVariableNad160.addAttribute(new Attribute("long_name", "Reflectance, nadir view (1580-1640 nm)"));
-            dataVariableNad160.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableNad160.addAttribute(new Attribute("units", "Percent"));
-            dataVariableNad160.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableNad160.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableNad160.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableNad160.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
-            dataVariableNad160.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableNad160.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
-
-            Variable dataVariableFwd160 = dataFile.addVariable(measurement, "reflec fward 1600nm", DataType.SHORT, dims);
-            dataVariableFwd160.addAttribute(new Attribute("long_name", "Reflectance, nadir view (1580-1640 nm)"));
-            dataVariableFwd160.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableFwd160.addAttribute(new Attribute("units", "Percent"));
-            dataVariableFwd160.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableFwd160.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableFwd160.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableFwd160.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
-            dataVariableFwd160.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableFwd160.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
-
-            Variable dataVariableNad87 = dataFile.addVariable(measurement, "reflec nadir 870nm", DataType.SHORT, dims);
-            dataVariableNad87.addAttribute(new Attribute("long_name", "Reflectance, nadir view (855-875 nm)"));
-            dataVariableNad87.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableNad87.addAttribute(new Attribute("units", "Percent"));
-            dataVariableNad87.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableNad87.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableNad87.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableNad87.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
-            dataVariableNad87.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableNad87.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
-
-            Variable dataVariableFwd87 = dataFile.addVariable(measurement, "reflec fward 870nm", DataType.SHORT, dims);
-            dataVariableFwd87.addAttribute(new Attribute("long_name", "Reflectance, nadir view (855-875 nm)"));
-            dataVariableFwd87.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableFwd87.addAttribute(new Attribute("units", "Percent"));
-            dataVariableFwd87.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableFwd87.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableFwd87.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableFwd87.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
-            dataVariableFwd87.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableFwd87.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
-
-            Variable dataVariableNad67 = dataFile.addVariable(measurement, "reflec nadir 670nm", DataType.SHORT, dims);
-            dataVariableNad67.addAttribute(new Attribute("long_name", "Reflectance, nadir view (649-669 nm)"));
-            dataVariableNad67.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableNad67.addAttribute(new Attribute("units", "Percent"));
-            dataVariableNad67.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableNad67.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableNad67.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableNad67.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
-            dataVariableNad67.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableNad67.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
-
-            Variable dataVariableFwd67 = dataFile.addVariable(measurement, "reflec fward 670nm", DataType.SHORT, dims);
-            dataVariableFwd67.addAttribute(new Attribute("long_name", "Reflectance, nadir view (649-669 nm)"));
-            dataVariableFwd67.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableFwd67.addAttribute(new Attribute("units", "Percent"));
-            dataVariableFwd67.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableFwd67.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableFwd67.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableFwd67.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
-            dataVariableFwd67.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableFwd67.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
-
-            Variable dataVariableNad55 = dataFile.addVariable(measurement, "reflec nadir 550nm", DataType.SHORT, dims);
-            dataVariableNad55.addAttribute(new Attribute("long_name", "Reflectance, nadir view (545-565 nm)"));
-            dataVariableNad55.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableNad55.addAttribute(new Attribute("units", "Percent"));
-            dataVariableNad55.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableNad55.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableNad55.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableNad55.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
-            dataVariableNad55.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableNad55.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
-
-            Variable dataVariableFwd55 = dataFile.addVariable(measurement, "reflec fward 550nm", DataType.SHORT, dims);
-            dataVariableFwd55.addAttribute(new Attribute("long_name", "Reflectance, nadir view (545-565 nm)"));
-            dataVariableFwd55.addAttribute(new Attribute("standard_name", "toa_reflectance"));
-            dataVariableFwd55.addAttribute(new Attribute("units", "Percent"));
-            dataVariableFwd55.addAttribute(new Attribute("scale_factor", 0.01f));
-            dataVariableFwd55.addAttribute(new Attribute("add_offset ", 0.0f));
-            dataVariableFwd55.addAttribute(new Attribute("_FillValue", (short) -2));
-            dataVariableFwd55.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
-            dataVariableFwd55.addAttribute(new Attribute("grid_mapping", "crs"));
-            dataVariableFwd55.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
+            for (String variable : variableNames) {
+                Variable dataVariable = dataFile.addVariable(measurement, variable, DataType.SHORT, dims);
+                dataVariable.addAttribute(new Attribute("long_name", longNames.get(variableNames.indexOf(variable))));
+                if (variable.contains("btemp")) {
+                    dataVariable.addAttribute(new Attribute("standard_name", "toa_brightness_temperature"));
+                    dataVariable.addAttribute(new Attribute("units", "K"));
+                } else {
+                    dataVariable.addAttribute(new Attribute("standard_name", "toa_reflectance"));
+                    dataVariable.addAttribute(new Attribute("units", "Percent"));
+                }
+                if (variable.contains("nadir")) {
+                    dataVariable.addAttribute(new Attribute("coordinates", "nadir_view_longitude nadir_view_latitude"));
+                    dataVariable.addAttribute(new Attribute("ancillary_variables", "confid_flags_nadir cloud_flags_nadir"));
+                } else {
+                    dataVariable.addAttribute(new Attribute("coordinates", "forward_view_longitude forward_view_latitude"));
+                    dataVariable.addAttribute(new Attribute("ancillary_variables", "confid_flags_fward cloud_flags_fward"));
+                }
+                dataVariable.addAttribute(new Attribute("scale_factor", 0.01f));
+                dataVariable.addAttribute(new Attribute("add_offset ", 0.0f));
+                dataVariable.addAttribute(new Attribute("_FillValue", (short) -2));
+                dataVariable.addAttribute(new Attribute("grid_mapping", "crs"));
+            }
 
             // Flag data
             // Flag data is packed as integer, future todo will enumerate flags for variables.
@@ -349,8 +223,7 @@ public class NetCDF4Writer {
             // Create file
             dataFile.create();
 
-            // Create data arrays
-            // TODO streamline this process in future update.
+            // Create data arrays (excluding measurement)
             ArrayFloat.D2 NadLatOut = new ArrayFloat.D2(iDim.getLength(), jDim.getLength());
             ArrayFloat.D2 NadLonOut = new ArrayFloat.D2(iDim.getLength(), jDim.getLength());
             ArrayFloat.D2 FwdLatOut = new ArrayFloat.D2(iDim.getLength(), jDim.getLength());
@@ -361,36 +234,19 @@ public class NetCDF4Writer {
             ArrayFloat.D2 NadLatFOVAlong = new ArrayFloat.D2(iDim.getLength(), jDim.getLength());
             ArrayFloat.D2 FwdLatFOVAcross = new ArrayFloat.D2(iDim.getLength(), jDim.getLength());
             ArrayFloat.D2 FwdLatFOVAlong = new ArrayFloat.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Nad1200Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Fwd1200Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Nad1100Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Fwd1100Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Nad370Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Fwd370Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Nad160Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Fwd160Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Nad87Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Fwd87Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Nad67Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Fwd67Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Nad55Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
-            ArrayShort.D2 Fwd55Out = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
             ArrayShort.D2 NadConfidOut = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
             ArrayShort.D2 FwdConfidOut = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
             ArrayShort.D2 NadCloudOut = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
             ArrayShort.D2 FwdCloudOut = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
 
-            Product readProduct = ProductIO.readProduct(parameters.inputFileLocation);
-            Band nad1200 = readProduct.getBand("btemp_nadir_1200");
-            Band fwd1200 = readProduct.getBand("btemp_fward_1200");
-            Band nad1100 = readProduct.getBand("btemp_nadir_1100");
-            Band fwd1100 = readProduct.getBand("btemp_fward_1100");
-            Band nad370 = readProduct.getBand("btemp_nadir_0370");
-            Band fwd370 = readProduct.getBand("btemp_fward_0370");
-            Band nad160 = readProduct.getBand("reflec_nadir_1600");
-            Band fwd160 = readProduct.getBand("reflec_fward_1600");
+            // Write extracted data (write measurement data later to reduce memory overhead)
+            int i, j, k;
 
-            int i, j;
+            Product readProduct = ProductIO.readProduct(parameters.inputFileLocation);
+            Band nadConfid = readProduct.getBand("confid_flags_nadir");
+            Band nadCloud = readProduct.getBand("cloud_flags_nadir");
+            Band fwdConfid = readProduct.getBand("confid_flags_fward");
+            Band fwdCloud = readProduct.getBand("cloud_flags_fward");
 
             for (i = 0; i < iDim.getLength(); i++) {
                 for (j = 0; j < jDim.getLength(); j++) {
@@ -404,152 +260,12 @@ public class NetCDF4Writer {
                     NadLatFOVAcross.set(i, j, (float) pixelPositions[i][j][7]);
                     FwdLatFOVAlong.set(i, j, (float) pixelPositions[i][j][8]);
                     FwdLatFOVAcross.set(i, j, (float) pixelPositions[i][j][9]);
-                    if (pixelPositions[i][j][0] != -999999.0 || pixelPositions[i][j][0] != -888888.0) {
-                        float value = nad1200.getSampleFloat(511 - (minX + j), minY + i);
-                        if (value < 0) {
-                            Nad1200Out.set(i, j, (short) -2);
-                        } else {
-                            Nad1200Out.set(i, j, (short) (value * 100));
-                        }
-                        value = nad1100.getSampleFloat(511 - (minX + j), minY + i);
-                        if (value < 0) {
-                            Nad1100Out.set(i, j, (short) -2);
-                        } else {
-                            Nad1100Out.set(i, j, (short) (value * 100));
-                        }
-                        value = nad370.getSampleFloat(511 - (minX + j), minY + i);
-                        if (value < 0) {
-                            Nad370Out.set(i, j, (short) -2);
-                        } else {
-                            Nad370Out.set(i, j, (short) (value * 100));
-                        }
-                        value = nad160.getSampleFloat(511 - (minX + j), minY + i);
-                        if (value < 0) {
-                            Nad160Out.set(i, j, (short) -2);
-                        } else {
-                            Nad160Out.set(i, j, (short) (value * 100));
-                        }
-                    } else {
-                        Nad1200Out.set(i, j, (short) -2);
-                        Nad1100Out.set(i, j, (short) -2);
-                        Nad370Out.set(i, j, (short) -2);
-                        Nad160Out.set(i, j, (short) -2);
-                    }
-                    if (pixelPositions[i][j][2] != -999999.0) {
-                        float fwdValue = fwd1200.getSampleFloat(511 - (minX + j), minY + i);
-                        if (fwdValue < 0) {
-                            Fwd1200Out.set(i, j, (short) -2);
-                        } else {
-                            Fwd1200Out.set(i, j, (short) (fwdValue * 100));
-                        }
-                        fwdValue = fwd1100.getSampleFloat(511 - (minX + j), minY + i);
-                        if (fwdValue < 0) {
-                            Fwd1100Out.set(i, j, (short) -2);
-                        } else {
-                            Fwd1100Out.set(i, j, (short) (fwdValue * 100));
-                        }
-                        fwdValue = fwd370.getSampleFloat(511 - (minX + j), minY + i);
-                        if (fwdValue < 0) {
-                            Fwd370Out.set(i, j, (short) -2);
-                        } else {
-                            Fwd370Out.set(i, j, (short) (fwdValue * 100));
-                        }
-                        fwdValue = fwd160.getSampleFloat(511 - (minX + j), minY + i);
-                        if (fwdValue < 0) {
-                            Fwd160Out.set(i, j, (short) -2);
-                        } else {
-                            Fwd160Out.set(i, j, (short) (fwdValue * 100));
-                        }
-                    } else {
-                        Fwd1200Out.set(i, j, (short) -2);
-                        Fwd1100Out.set(i, j, (short) -2);
-                        Fwd370Out.set(i, j, (short) -2);
-                        Fwd160Out.set(i, j, (short) -2);
-                    }
-                }
-            }
-
-            // Problem with BEAM reader so break product sampling into two steps...
-            nad1200.dispose();
-            fwd1200.dispose();
-            nad1100.dispose();
-            fwd1100.dispose();
-            nad370.dispose();
-            fwd370.dispose();
-            nad160.dispose();
-            fwd160.dispose();
-            readProduct.closeIO();
-            readProduct = ProductIO.readProduct(parameters.inputFileLocation);
-            Band nad87 = readProduct.getBand("reflec_nadir_0870");
-            Band fwd87 = readProduct.getBand("reflec_fward_0870");
-            Band nad67 = readProduct.getBand("reflec_nadir_0670");
-            Band fwd67 = readProduct.getBand("reflec_fward_0670");
-            Band nad55 = readProduct.getBand("reflec_nadir_0550");
-            Band fwd55 = readProduct.getBand("reflec_fward_0550");
-            Band nadConfid = readProduct.getBand("confid_flags_nadir");
-            Band nadCloud = readProduct.getBand("cloud_flags_nadir");
-            Band fwdConfid = readProduct.getBand("confid_flags_fward");
-            Band fwdCloud = readProduct.getBand("cloud_flags_fward");
-
-            for (i = 0; i < iDim.getLength(); i++) {
-                for (j = 0; j < jDim.getLength(); j++) {
                     NadConfidOut.set(i, j, (short) nadConfid.getSampleInt(511 - (minX + j), minY + i));
                     FwdConfidOut.set(i, j, (short) fwdConfid.getSampleInt(511 - (minX + j), minY + i));
                     NadCloudOut.set(i, j, (short) nadCloud.getSampleInt(511 - (minX + j), minY + i));
                     FwdCloudOut.set(i, j, (short) fwdCloud.getSampleInt(511 - (minX + j), minY + i));
-                    if (pixelPositions[i][j][0] != -999999.0 || pixelPositions[i][j][0] != -888888.0) {
-                        float value = nad87.getSampleFloat(511 - (minX + j), minY + i);
-                        if (value < 0) {
-                            Nad87Out.set(i, j, (short) -2);
-                        } else {
-                            Nad87Out.set(i, j, (short) (value * 100));
-                        }
-                        value = nad67.getSampleFloat(511 - (minX + j), minY + i);
-                        if (value < 0) {
-                            Nad67Out.set(i, j, (short) -2);
-                        } else {
-                            Nad67Out.set(i, j, (short) (value * 100));
-                        }
-                        value = nad55.getSampleFloat(511 - (minX + j), minY + i);
-                        if (value < 0) {
-                            Nad55Out.set(i, j, (short) -2);
-                        } else {
-                            Nad55Out.set(i, j, (short) (value * 100));
-                        }
-                    } else {
-                        Nad87Out.set(i, j, (short) -2);
-                        Nad67Out.set(i, j, (short) -2);
-                        Nad55Out.set(i, j, (short) -2);
-                    }
-                    if (pixelPositions[i][j][2] != -999999.0) {
-                        float fwdValue = fwd87.getSampleFloat(511 - (minX + j), minY + i);
-                        if (fwdValue < 0) {
-                            Fwd87Out.set(i, j, (short) -2);
-                        } else {
-                            Fwd87Out.set(i, j, (short) (fwdValue * 100));
-                        }
-                        fwdValue = fwd67.getSampleFloat(511 - (minX + j), minY + i);
-                        if (fwdValue < 0) {
-                            Fwd67Out.set(i, j, (short) -2);
-                        } else {
-                            Fwd67Out.set(i, j, (short) (fwdValue * 100));
-                        }
-                        fwdValue = fwd55.getSampleFloat(511 - (minX + j), minY + i);
-                        if (fwdValue < 0) {
-                            Fwd55Out.set(i, j, (short) -2);
-                        } else {
-                            Fwd55Out.set(i, j, (short) (fwdValue * 100));
-                        }
-                    } else {
-                        Fwd87Out.set(i, j, (short) -2);
-                        Fwd67Out.set(i, j, (short) -2);
-                        Fwd55Out.set(i, j, (short) -2);
-                    }
                 }
             }
-
-            readProduct.closeIO();
-            // Write data to file
             dataFile.write(dataVariableNadLat, NadLatOut);
             dataFile.write(dataVariableNadLon, NadLonOut);
             dataFile.write(dataVariableFwdLat, FwdLatOut);
@@ -560,25 +276,45 @@ public class NetCDF4Writer {
             dataFile.write(dataVariableNadFOVAlong, NadLatFOVAlong);
             dataFile.write(dataVariableFwdFOVAcross, FwdLatFOVAcross);
             dataFile.write(dataVariableFwdFOVAlong, FwdLatFOVAlong);
-            dataFile.write(dataVariableNad1200, Nad1200Out);
-            dataFile.write(dataVariableFwd1200, Fwd1200Out);
-            dataFile.write(dataVariableNad1100, Nad1100Out);
-            dataFile.write(dataVariableFwd1100, Fwd1100Out);
-            dataFile.write(dataVariableNad370, Nad370Out);
-            dataFile.write(dataVariableFwd370, Fwd370Out);
-            dataFile.write(dataVariableNad160, Nad160Out);
-            dataFile.write(dataVariableFwd160, Fwd160Out);
-            dataFile.write(dataVariableNad87, Nad87Out);
-            dataFile.write(dataVariableFwd87, Fwd87Out);
-            dataFile.write(dataVariableNad67, Nad67Out);
-            dataFile.write(dataVariableFwd67, Fwd67Out);
-            dataFile.write(dataVariableNad55, Nad55Out);
-            dataFile.write(dataVariableFwd55, Fwd55Out);
             dataFile.write(dataVariableNadConfid, NadConfidOut);
             dataFile.write(dataVariableFwdConfid, FwdConfidOut);
             dataFile.write(dataVariableNadCloud, NadCloudOut);
             dataFile.write(dataVariableFwdCloud, FwdCloudOut);
 
+            Double[][][] arrayFlags = new Double[pixelPositions.length + 1][pixelPositions[0].length + 1][2];
+            for (i = 0; i < iDim.getLength(); i++) {
+                for (j = 0; j < jDim.getLength(); j++) {
+                    arrayFlags[i][j][0] = pixelPositions[i][j][0];
+                    arrayFlags[i][j][1] = pixelPositions[i][j][2];
+                }
+            }
+            
+            ArrayShort.D2 variableOut = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
+
+            for (k = 0; k < variableNames.size(); k++) {
+                Band band = readProduct.getBand(variableNames.get(k));
+                int viewFlag = 0;
+                if (variableNames.contains("fward")) {
+                    viewFlag = 1;
+                }
+                for (i = 0; i < iDim.getLength(); i++) {
+                    for (j = 0; j < jDim.getLength(); j++) {
+                        if (arrayFlags[i][j][viewFlag] != -999999.0 || arrayFlags[i][j][viewFlag] != -888888.0) {
+                            float value = band.getSampleFloat(511 - (minX + j), minY + i);
+                            if (value < 0) {
+                                variableOut.set(i, j, (short) -2);
+                            } else {
+                                variableOut.set(i, j, (short) (value * 100));
+                            }
+                        } else {
+                            variableOut.set(i, j, (short) -2);
+                        }
+                    }
+                }
+                // Write data to file
+                dataFile.write(dataFile.findVariable("/Measurements/" + variableNames.get(k)), variableOut);
+            }
+            readProduct.closeIO();
         } catch (Exception ex) {
             ex.printStackTrace();
         } finally {
