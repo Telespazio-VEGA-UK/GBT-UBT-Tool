@@ -95,7 +95,7 @@ public class Controller {
     private static InputParameters parameters;
 
     public static void main(String[] args) {
-        System.out.println("AATSR Pixel Ungridding Tool Version 1.51");
+        System.out.println("AATSR Pixel Ungridding Tool Version 1.52");
 
         //Check that the input array is the right length
         checkInputs(args);

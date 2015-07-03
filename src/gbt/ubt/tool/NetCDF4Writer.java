@@ -20,6 +20,7 @@
  */
 package gbt.ubt.tool;
 
+import com.bc.ceres.core.ProgressMonitor;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -30,6 +31,7 @@ import java.util.List;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import ucar.nc2.jni.netcdf.Nc4Iosp;
 
 import ucar.nc2.Dimension;
@@ -188,6 +190,7 @@ public class NetCDF4Writer {
                 dataVariable.addAttribute(new Attribute("add_offset ", 0.0f));
                 dataVariable.addAttribute(new Attribute("_FillValue", (short) -2));
                 dataVariable.addAttribute(new Attribute("grid_mapping", "crs"));
+                dataVariable.addAttribute(new Attribute("valid_min", (short) 0));
             }
 
             // Flag data
@@ -248,6 +251,17 @@ public class NetCDF4Writer {
             Band fwdConfid = readProduct.getBand("confid_flags_fward");
             Band fwdCloud = readProduct.getBand("cloud_flags_fward");
 
+            int jDimLength = jDim.getLength();
+            int iDimLength = iDim.getLength();
+            ProductData nadConfidValues = ProductData.createInstance(new short[jDim.getLength() * iDim.getLength()]);
+            nadConfid.readRasterData(minX, minY, jDimLength, iDimLength, nadConfidValues, ProgressMonitor.NULL);
+            ProductData nadCloudValues = ProductData.createInstance(new short[jDim.getLength() * iDim.getLength()]);
+            nadCloud.readRasterData(minX, minY, jDimLength, iDimLength, nadCloudValues, ProgressMonitor.NULL);
+            ProductData fwdConfidValues = ProductData.createInstance(new short[jDim.getLength() * iDim.getLength()]);
+            fwdConfid.readRasterData(minX, minY, jDimLength, iDimLength, fwdConfidValues, ProgressMonitor.NULL);
+            ProductData fwdCloudValues = ProductData.createInstance(new short[jDim.getLength() * iDim.getLength()]);
+            fwdCloud.readRasterData(minX, minY, jDimLength, iDimLength, fwdCloudValues, ProgressMonitor.NULL);
+            
             for (i = 0; i < iDim.getLength(); i++) {
                 for (j = 0; j < jDim.getLength(); j++) {
                     NadLatOut.set(i, j, (float) pixelPositions[i][j][0]);
@@ -260,10 +274,10 @@ public class NetCDF4Writer {
                     NadLatFOVAcross.set(i, j, (float) pixelPositions[i][j][7]);
                     FwdLatFOVAlong.set(i, j, (float) pixelPositions[i][j][8]);
                     FwdLatFOVAcross.set(i, j, (float) pixelPositions[i][j][9]);
-                    NadConfidOut.set(i, j, (short) nadConfid.getSampleInt(511 - (minX + j), minY + i));
-                    FwdConfidOut.set(i, j, (short) fwdConfid.getSampleInt(511 - (minX + j), minY + i));
-                    NadCloudOut.set(i, j, (short) nadCloud.getSampleInt(511 - (minX + j), minY + i));
-                    FwdCloudOut.set(i, j, (short) fwdCloud.getSampleInt(511 - (minX + j), minY + i));
+                    NadConfidOut.set(i, j, (short)  nadConfidValues.getElemIntAt(((jDimLength-1)-j) + (i*jDimLength)));
+                    FwdConfidOut.set(i, j, (short) nadCloudValues.getElemIntAt(((jDimLength-1)-j) + (i*jDimLength)));
+                    NadCloudOut.set(i, j, (short) fwdConfidValues.getElemIntAt(((jDimLength-1)-j) + (i*jDimLength)));
+                    FwdCloudOut.set(i, j, (short) fwdCloudValues.getElemIntAt(((jDimLength-1)-j) + (i*jDimLength)));
                 }
             }
             dataFile.write(dataVariableNadLat, NadLatOut);
@@ -288,23 +302,25 @@ public class NetCDF4Writer {
                     arrayFlags[i][j][1] = pixelPositions[i][j][2];
                 }
             }
-            
-            ArrayShort.D2 variableOut = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
 
+            ArrayShort.D2 variableOut = new ArrayShort.D2(iDim.getLength(), jDim.getLength());
+            System.out.println("Copying Measurement Data");
             for (k = 0; k < variableNames.size(); k++) {
                 Band band = readProduct.getBand(variableNames.get(k));
                 int viewFlag = 0;
                 if (variableNames.contains("fward")) {
                     viewFlag = 1;
                 }
+                ProductData values = ProductData.createInstance(new short[jDim.getLength() * iDim.getLength()]);
+                band.readRasterData(minX, minY, jDimLength, iDimLength, values, ProgressMonitor.NULL);
                 for (i = 0; i < iDim.getLength(); i++) {
                     for (j = 0; j < jDim.getLength(); j++) {
                         if (arrayFlags[i][j][viewFlag] != -999999.0 || arrayFlags[i][j][viewFlag] != -888888.0) {
-                            float value = band.getSampleFloat(511 - (minX + j), minY + i);
+                            short value = (short) values.getElemIntAt(((jDimLength-1)-j) + (i*jDimLength));
                             if (value < 0) {
                                 variableOut.set(i, j, (short) -2);
                             } else {
-                                variableOut.set(i, j, (short) (value * 100));
+                                variableOut.set(i, j, value);
                             }
                         } else {
                             variableOut.set(i, j, (short) -2);
