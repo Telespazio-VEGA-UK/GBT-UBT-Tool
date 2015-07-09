@@ -22,6 +22,7 @@
 package gbt.ubt.tool;
 
 import com.bc.ceres.glevel.MultiLevelImage;
+import java.io.File;
 import java.io.IOException;
 //import java.io.BufferedInputStream;
 //import java.io.File;
@@ -40,6 +41,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
@@ -47,6 +49,8 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.util.logging.BeamLogManager;
+import org.orekit.errors.OrekitException;
+import org.orekit.propagation.BoundedPropagator;
 
 /**
  *
@@ -65,16 +69,18 @@ public class Controller {
      * ATSR level 1B product (Envisat Data Product (.N1) format)
      * L1B Characterisation File (binary)
      * AATSR FOV Calibration Measurement File (ASCII (.SFV) format)
+     * (OPTIONAL) GlobalDigital Elevation Model for Orthorectification (GeoTIFF (.tif) format)
      * 
      * OUTPUTS
      * Extracted un-gridded geolocation, acquisition time & channel Field of View Map (HDF5 (.h5) or NetCDF4 CF (.nc) formats)
      * 
-     * Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file(.h5/.nc)> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-Relation> OPT<[ix,iy]> OPT<[jx,jy]>
-     * Example: java -jar GBT-UBT-Tool.jar "./l1b_sample.n1" "./ATS_CH1_AXVIEC20120615_105541_20020301_000000_20200101_000000" "./FOV_measurements/10310845.SFV" "./output.nc" "1000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "[0,0]" "[511,2559]"
+     * Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file(.h5/.nc)> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-Relation> <Ortho> <DEM> OPT<[ix,iy]> OPT<[jx,jy]> 
+     * Example: java -jar GBT-UBT-Tool.jar "./l1b_sample.n1" "./ATS_CH1_AXVIEC20120615_105541_20020301_000000_20200101_000000" "./FOV_measurements/10310845.SFV" "./output.nc" "1000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "TRUE" "./DEM/global/gt30_global.tif" "[0,0]" "[511,2559]"
      * 
      * Uses the BEAM Java API 4.11, available @ (http://www.brockmann-consult.de/cms/web/beam/releases)
      * Uses the Java HDF5 Interface (JHI5), available @ (http://www.hdfgroup.org/hdf-java-html/)
      * Uses the Java NetCDF Interface, available @ (http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/documentation.htm)
+     * Uses the Orekit 7.0 space dynamics library (for orthorectification), available @ (https://www.orekit.org/download.html)
      */
 
     /**
@@ -84,18 +90,20 @@ public class Controller {
      * args[2] = AATSR FOV calibration measurement file
      * args[3] = output file (either hdf5 or netcdf4 cf depending on file extension)
      * args[4] = rows assigned per CPU thread 
-     * args[5] = extent of IFOV to report as distance in pixel projection 
+     * args[5] = extent of IFOV to report as distance in pixel projection
      * args[6] = boolean to allow user to trim image rows of product where no ADS available
      * args[7] = to where the pixel coordinates are reference Centre/Corner
      * args[8] = boolean to apply topographic corrections to tie points
      * args[9] = distance (image coordinates) pixel can be from tie-point to have topo correction applied
-     * args[11] = optional argument to convert pixel ix, iy
-     * args[12]= optional argument used with args[11] to convert array of pixels [ix,iy], [jx,jy]
+     * args[10]= boolean to orthorectify using an external DEM
+     * args[11]= location of external Global DEM GeoTIFF (Note dummy parameter must be passed if orthorectify set FALSE)
+     * args[12]= optional argument to convert pixel ix, iy
+     * args[13]= optional argument used with args[11] to convert array of pixels [ix,iy], [jx,jy]
      */
     private static InputParameters parameters;
 
     public static void main(String[] args) {
-        System.out.println("AATSR Pixel Ungridding Tool Version 1.52");
+        System.out.println("AATSR Pixel Ungridding Tool Version 1.6");
 
         //Check that the input array is the right length
         checkInputs(args);
@@ -103,7 +111,7 @@ public class Controller {
         // Parse the inputs and set up the activity
         parameters = new InputParameters();
         parameters.parse(args);
-        parameters.toolVersion = "1.51";
+        parameters.toolVersion = "1.6";
         processProduct();
 
         System.out.println("Processing Complete");
@@ -112,9 +120,9 @@ public class Controller {
     }
 
     private static void checkInputs(String[] args) {
-        if (args.length < 10 || args.length > 12) {
+        if (args.length < 12 || args.length > 14) {
             System.out.println("Check Program Inputs");
-            System.out.println("Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file(.h5/.nc)> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-relation> OPT<[ix,iy]> OPT<[jx,jy]>");
+            System.out.println("Usage: gbt2ubt <aatsr-product> <l1b-characterisation-file> <fov-measurement-file> <output-file(.h5/.nc)> <rows-per-CPU-thread> <IFOV-reporting-extent-fraction> <Trim-end-of-product> <Pixel Reference> <Topography> <Topo-relation> <Ortho> <DEM> OPT<[ix,iy]> OPT<[jx,jy]>");
             System.exit(1);
         }
     }
@@ -123,7 +131,7 @@ public class Controller {
         // This method sets up the parallelism, calls the calculation tool and collates the results prior to output
         try {
             System.out.println("Calculating Pixel Geolocation, Sample Times & FOV");
-            
+
             // Mask some warnings
             BeamLogManager.removeRootLoggerHandlers();
             System.setProperty("com.sun.media.jai.disableMediaLib", "true");
@@ -144,7 +152,7 @@ public class Controller {
             int maxY;
             int minXValue = 0;
             int minYValue = 0;
-            
+
             // If subseting the product, set the min/max dimensions according to input
             if (parameters.subsetFlag == true) {
                 maxXValue = parameters.x2;
@@ -202,6 +210,25 @@ public class Controller {
             final List<List<Double>> pixelProjectionMap = new ArrayList<>();
             Calculator.getConstantPixelProjection(parameters, pixelProjectionMap);
 
+            // Compute the ephemeris of the satellite for image orthorectification
+            final BoundedPropagator ephemeris = Orthorectifier.generateEphemeris(parameters);
+
+            // Load DEM from external file
+            Band heightData = null;
+            if (parameters.orthorectify) {
+                System.out.println("Loading DEM: " + parameters.DEMFilename);
+                File dem = new File(parameters.DEMFilename);
+                if (dem.canRead()) {
+                    ProductReader productReader = ProductIO.getProductReader("GeoTIFF");
+                    Product demData = productReader.readProductNodes(dem, null);
+                    heightData = demData.getBandAt(0);
+                } else {
+                    System.out.println("Could not read DEM file. Currently only a global GeoTIFF \".tif\" is supported");
+                    throw new RuntimeException();
+                }
+            }
+            final Band DEM = heightData;
+
             // Get number of available processsors and create threads for each one
             final int availableProcessors = Runtime.getRuntime().availableProcessors();
             System.out.println("Number of available processors: " + availableProcessors);
@@ -234,7 +261,7 @@ public class Controller {
                         String threadName = "Thread_" + String.valueOf(j);
                         int startingScanNumber = j * rowsPerThread + minY;
                         try {
-                            Calculator.unGrid(tempResult, startingScanNumber, rowsPerThread,minX, maxX, s0, NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, SCAN_PIXEL_X_AND_Y_ADS_Records, GEOLOCATION_ADS_Records, scanYCoords, threadName, finalParameters, pixelProjectionMap);
+                            Calculator.unGrid(tempResult, startingScanNumber, rowsPerThread, minX, maxX, s0, NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, SCAN_PIXEL_X_AND_Y_ADS_Records, GEOLOCATION_ADS_Records, scanYCoords, threadName, finalParameters, pixelProjectionMap, ephemeris, DEM);
                         } catch (Exception ex) {
                             System.out.println(threadName + " crash");
                             System.out.println(ex.getMessage());
@@ -271,7 +298,7 @@ public class Controller {
                     String threadName = "Thread_final";
                     int startingScanNumber = rowsPerThread * (numberOfFullThreads) + minY;
                     try {
-                        Calculator.unGrid(tempResult, startingScanNumber, rowsInFinalThread, minX, maxX, s0, NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, SCAN_PIXEL_X_AND_Y_ADS_Records, GEOLOCATION_ADS_Records, scanYCoords, threadName, finalParameters, pixelProjectionMap);
+                        Calculator.unGrid(tempResult, startingScanNumber, rowsInFinalThread, minX, maxX, s0, NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, SCAN_PIXEL_X_AND_Y_ADS_Records, GEOLOCATION_ADS_Records, scanYCoords, threadName, finalParameters, pixelProjectionMap, ephemeris, DEM);
                     } catch (Exception ex) {
                         System.out.println(threadName + " crash");
                         System.out.println(ex.getMessage());
@@ -370,7 +397,7 @@ public class Controller {
                     System.out.println(ex.getMessage());
                 }
             }
-        // This commented code is for removing the serialised results from a temp file and is currently unused
+            // This commented code is for removing the serialised results from a temp file and is currently unused
 //            /* Remove the temporary result files */
 //            for (RunnableFuture task : tasks) {
 //                File filename = new File((String) task.get());
@@ -384,8 +411,8 @@ public class Controller {
             } else{
                 NetCDF4Writer.writeDataTofile(parameters, pixelPositions, maxX, maxY, minX, minY);
             }
-            
-        } catch (IOException | RuntimeException ex) {
+
+        } catch (IOException | OrekitException | RuntimeException ex) {
             System.out.println(ex.getCause());
             System.out.println(ex.fillInStackTrace());
             System.out.println("Error in setup");

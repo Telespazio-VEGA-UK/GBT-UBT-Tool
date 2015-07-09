@@ -23,8 +23,10 @@ package gbt.ubt.tool;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
+import org.orekit.propagation.BoundedPropagator;
 
 /**
  *
@@ -32,7 +34,7 @@ import org.esa.beam.framework.datamodel.ProductNodeGroup;
  *
  * Contact: alasdhair(dot)beaton(at)telespazio(dot)com
  *
- * 
+ *
  */
 class Calculator {
     /* This class controls the execution of the ungridding process for a given subset of pixels
@@ -42,12 +44,15 @@ class Calculator {
     public Calculator() {
     }
 
-    public static void unGrid(double[][][] tempResult, int startingScanNumber, int rowsPerThread, int minX, int maxX, int s0, ProductNodeGroup<MetadataElement> NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, ProductNodeGroup<MetadataElement> FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, ProductNodeGroup<MetadataElement> SCAN_PIXEL_X_AND_Y_ADS_Records, ProductNodeGroup<MetadataElement> GEOLOCATION_ADS_Records, List<Double> scanYCoords, String threadName, InputParameters parameters, List<List<Double>> pixelProjectionMap) {
+    public static void unGrid(double[][][] tempResult, int startingScanNumber, int rowsPerThread, int minX, int maxX, int s0, ProductNodeGroup<MetadataElement> NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, ProductNodeGroup<MetadataElement> FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, ProductNodeGroup<MetadataElement> SCAN_PIXEL_X_AND_Y_ADS_Records, ProductNodeGroup<MetadataElement> GEOLOCATION_ADS_Records, List<Double> scanYCoords, String threadName, InputParameters parameters, List<List<Double>> pixelProjectionMap, BoundedPropagator ephemeris, Band DEM) {
         for (int i = startingScanNumber; i < startingScanNumber + rowsPerThread; i++) {
             for (int j = minX; j < maxX; j++) {
                 int[] pixelRelativeNumbers = {0, 0};
                 double[] pixelNewPositionsAndTimes = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
                 getPixelPositionsAcquisitionTimes(i, j, s0, NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, SCAN_PIXEL_X_AND_Y_ADS_Records, GEOLOCATION_ADS_Records, scanYCoords, pixelNewPositionsAndTimes, pixelRelativeNumbers, parameters);
+                if (parameters.orthorectify) {
+                    Orthorectifier.orthorectify(ephemeris, pixelNewPositionsAndTimes,parameters, DEM);
+                }
                 tempResult[i - startingScanNumber][j - minX][0] = pixelNewPositionsAndTimes[0];
                 tempResult[i - startingScanNumber][j - minX][1] = pixelNewPositionsAndTimes[1];
                 tempResult[i - startingScanNumber][j - minX][2] = pixelNewPositionsAndTimes[2];
@@ -350,7 +355,7 @@ class Calculator {
             int top = 0;
             int bottom = 0;
             int found = 0;
-            
+
             double top_extent_1 = 0;
             double top_extent_2 = 0;
             double bottom_extent_1 = 0;
@@ -359,7 +364,7 @@ class Calculator {
             double right_extent_2 = 0;
             double left_extent_1 = 0;
             double left_extent_2 = 0;
-            
+
             
             double extent = parameters.pixelIFOVReportingExtent;
             for (int i = 0; i < (maxAcrossTrackIndx - minAcrossTrackIndx + 1); i++) {
@@ -462,7 +467,7 @@ class Calculator {
             contouredExtent.getExtent(acrossTrackAngleArray, alongTrackAngleArray);
             double pixelAcrossDistance = contouredExtent.pixelAcrossDistance;
             double pixelAlongDistance = contouredExtent.pixelAlongDistance;
-            
+
             if (k == 0) {
                 pixelDimensions[0] = pixelAlongDistance;
                 pixelDimensions[1] = pixelAcrossDistance;
@@ -472,7 +477,7 @@ class Calculator {
             }
         }
     }
-    
+
     public static double linearInterp(double x0, double x1, double y0, double y1, double x){
         double y = y0 + ((y1-y0)*((x - x0)/(x1 - x0)));
         return y;

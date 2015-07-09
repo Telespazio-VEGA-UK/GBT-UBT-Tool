@@ -68,6 +68,8 @@ public class InputParameters {
     public double topographyHomogenity;
     public String inputString;
     public String toolVersion;
+    public boolean orthorectify;
+    public String DEMFilename;
 
     public InputParameters() {
         alongTrackAngle = new double[31 * 31];
@@ -98,9 +100,11 @@ public class InputParameters {
             this.topographicFlag = true;
         }
         this.topographyHomogenity = Double.valueOf(String.valueOf(args[9]));
-        if (args.length == 11 || args.length == 12) {
+        this.orthorectify = Boolean.parseBoolean(args[10]);;
+        this.DEMFilename = args[11];
+        if (args.length == 13 || args.length == 14) {
             this.subsetFlag = true;
-            String values = args[10].replace(" ", "");
+            String values = args[12].replace(" ", "");
             int yStart = values.lastIndexOf(",");
             int yStop = values.lastIndexOf("]");
             String yValue = values.substring(yStart + 1, yStop);
@@ -109,12 +113,12 @@ public class InputParameters {
             String xValue = values.substring(xStart + 1, yStart);
             this.x1 = Integer.valueOf(xValue);
             this.singlePixelFlag = true;
-            if (args.length == 11) {
+            if (args.length == 13) {
                 this.y2 = this.y1 + 1;
                 this.x2 = this.x1 + 1;
             } else {
                 this.singlePixelFlag = false;
-                String values2 = args[11].replace(" ", "");
+                String values2 = args[13].replace(" ", "");
                 yStart = values2.lastIndexOf(",");
                 yStop = values2.lastIndexOf("]");
                 yValue = values2.substring(yStart + 1, yStop);

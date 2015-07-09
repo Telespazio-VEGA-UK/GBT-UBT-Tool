@@ -43,7 +43,10 @@ import ucar.nc2.Variable;
 
 /**
  *
- * @author abeaton
+ * @author ABeaton, Telespazio VEGA UK Ltd 06/07/2015
+ *
+ * Contact: alasdhair(dot)beaton(at)telespazio(dot)com
+ *
  */
 public class NetCDF4Writer {
 
