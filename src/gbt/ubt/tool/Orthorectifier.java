@@ -90,7 +90,7 @@ public class Orthorectifier {
             AbsoluteDate referenceDate = new AbsoluteDate(2000, 1, 1, 0, 0, 0.0, utc);
             
             // if pixel is not valid, do not compute orthorectification
-            if (pixelNewPositionsAndTimes[0] != -999999.0 || pixelNewPositionsAndTimes[0] != -888888.0) {
+            if (pixelNewPositionsAndTimes[0] != -999999.0 && pixelNewPositionsAndTimes[0] != -888888.0) {
                 float terrainHeight = getHeightFromDEM(pixelNewPositionsAndTimes[0], pixelNewPositionsAndTimes[1], params, DEM);
                 /* Height has to be within constraints. Note DEM should provide NaN for sea areas (e.g. for 16 bit int 32767)
                 if DEM provides 0.0 for sea areas the computation becomes expensive.
@@ -152,7 +152,7 @@ public class Orthorectifier {
             PixelPos pixelPos = DEM.getGeoCoding().getPixelPos(new GeoPos((float) latitude, (float) longitude), null);
             height = DEM.getSampleFloat((int) Math.floor(pixelPos.x), (int) Math.floor(pixelPos.y));
         } catch (Exception ex) {
-            System.out.println("Could not get height from DEM: " + String.valueOf(latitude) + " " + String.valueOf(longitude) + " Using 0.0 metres");
+            System.out.println("Could not get height from DEM: " + "Lat: " + String.valueOf(latitude) + " Lon: " + String.valueOf(longitude) + " Using 0.0 metres");
         }
         return height;
     }
@@ -261,7 +261,7 @@ public class Orthorectifier {
             AbsoluteDate startDate = new AbsoluteDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND), utc);
             cal.setTime(stopTime);
             AbsoluteDate stopDate = new AbsoluteDate(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DATE), cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND), utc);
-            SpacecraftState finalState = propagator.propagate(startDate, stopDate);
+            SpacecraftState finalState = propagator.propagate(startDate.shiftedBy(-600.0), stopDate.shiftedBy(600.0));
             BoundedPropagator ephemeris = propagator.getGeneratedEphemeris();
 
             return ephemeris;
