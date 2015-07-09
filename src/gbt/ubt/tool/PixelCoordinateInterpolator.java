@@ -150,8 +150,8 @@ class PixelCoordinateInterpolator {
         /* Get scan time of record as a double */
         ProductData dsrTime = scanADSRecord.getAttributeAt(0).getData();
         
-        double scanTime = dsrTime.getElemDoubleAt(0) + (dsrTime.getElemDoubleAt(1) / 86400.0) + ((dsrTime.getElemDoubleAt(2) / 1.0e6) / 86400.0);
-
+        double scanTime = dsrTime.getElemIntAt(0) + (dsrTime.getElemDoubleAt(1) / 86400.0) + ((dsrTime.getElemDoubleAt(2) / 1.0e6) / 86400.0);
+        
         /* If the scan number does not occur at this granule, correct the time */
         if (s != currentRecordScanNumber && s > s0) {
             double scanTimeAlongTrackMod = ((0.15 * (s - (32 * sg) - s0)) / 86400.0);
