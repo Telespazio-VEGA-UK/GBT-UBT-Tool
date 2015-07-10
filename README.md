@@ -1,4 +1,4 @@
-AATSR Pixel Ungridding Tool Version 1.5      26/06/2015
+AATSR Pixel Ungridding Tool Version 1.6      09/07/2015
 
 --------------------------------------------------------------------------------
 QUICKSTART 
@@ -10,6 +10,7 @@ INPUTS
 -(A)ATSR(-1/2) level 1B product (Envisat Data Product (.N1) format) 
 -L1B Characterisation File (ascii & binary format) 
 -AATSR FOV Calibration Measurement File (ASCII (.SFV) format) 
+-(OPTIONAL) Global Digital Elevation Model for Orthorectification (GeoTIFF (.tif) format)
 
 OUTPUTS 
 -Extracted un-gridded geolocation, acquisition time & channel Field of View Map 
@@ -19,13 +20,13 @@ OUTPUTS
 USAGE: gbt2ubt <(a)atsr(-1/2)-product> <l1b-characterisation-file> ...
        <fov-measurement-file> <output-file> <rows-per-CPU-thread> ...
        <IFOV-reporting-extent-fraction> <Trim-end-of-product> ... 
-       <Pixel Reference> <Topography> <Topo_Relation (km)> OPT<[ix,iy]>... 
-       OPT<[jx,jy]> 
+       <Pixel Reference> <Topography> <Topo_Relation (km)> <Ortho> <DEM> ...
+       OPT<[ix,iy]> OPT<[jx,jy]> 
 
 EXAMPLE: java -jar -d64 -Xmx8g GBT-UBT-Tool.jar "./l1b_sample.n1" ...
          "./CH1_Files/ATS_CH1_AX" "./FOV_measurements/10310845.SFV" ...
-         "./output.nc" "1000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "[0,0]" ...
-         "[511,511]" 
+         "./output.nc" "2000" "0.4" "TRUE" "Corner" "FALSE" "0.05" "TRUE"...
+         "./DEM/global/gt30_global.tif" "[0,0]" "[511,511]" 
 
 Uses the BEAM Java API 4.11, 
 available @ (http://www.brockmann-consult.de/cms/web/beam/releases) 
@@ -35,6 +36,9 @@ available @ (http://www.hdfgroup.org/hdf-java-html/)
 
 Uses the Java NetCDF Interface, 
 available @ (http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/documentation.htm)
+
+Uses the Orekit 7.0 space dynamics library (for orthorectification), 
+available @ (https://www.orekit.org/download.html)
 
 Distribution includes Windows 64bit HDF5 libraries, pre-built binaries for 
 other platforms are available @ 
@@ -58,13 +62,22 @@ products". These documents are available @
 (https://earth.esa.int/pub/ESA_DOC/ENVISAT/AATSR/Instrument_Pixel_Coordinates_and_Measurement_Time.pdf)
 (https://earth.esa.int/instruments/aatsr/faq/AATSR_FAQ_issue1.pdf)
 
-2) Computes the acquisition time of the pixels using the Andrew Birks TN. This
+2) Optionally orthorectifies the UBT locations taking into account a Digital
+Elevation Model (DEM) (currently the user must specify a global GeoTIFF file).
+The pixel to satellite line of sight (LOS) in the local topographic frame is 
+reconstructed through numerical propagation of the state vector found in the MPH
+of the L1B product. The AATSR L1B data processing model (topographic corrections
+section 5.16) is followed to produce geolocation displacements along the Earth 
+surface. The Orekit library is used for orbit propagation, refraction and 
+geometry calculations.
+
+3) Computes the acquisition time of the pixels using the Andrew Birks TN. This
 methodology allows retrieval of the acquisition time on a pixel basis
 as opposed to the usual per scan basis. Note that there appears to be a
 systematic bias of +0.15 seconds in the acquisition time retrieval. This is
 hinted at in the Andrew Birks TN.
 
-3) Computes the extent (size) of AATSR pixel FOVs projected onto a spherical 
+4) Computes the extent (size) of AATSR pixel FOVs projected onto a spherical 
 Earth surface for both along and across track directions. A threshold parameter 
 is used to return the extent of the projection for a given FOV intensity. This
 computation facilitates better characterisation of the instrument measurements,
@@ -72,7 +85,7 @@ adding a spatial coverage element to the original geolocation. The algorithms to
 compute the FOV projection were extracted from IDL code provided by Dave Smith 
 (RAL). Please see section FOV Computation Algorithm for more details. 
 
-4) Outputs the results in array datasets within an HDF5 format file or NetCDF4 
+5) Outputs the results in array datasets within an HDF5 format file or NetCDF4 
 CF format file.
 
 HDF5 Output File Structure 
@@ -152,8 +165,10 @@ SLSTR.
 FILE MANIFEST 
 --------------------------------------------------------------------------------
 -<Example> Sample command line input and the resulting output data structure
-           -command line input.txt
+           -command line input (hdf5 output).txt
            -subset_output.h5
+           -command line input (netCDF4 CF output).txt
+           -subset_output.nc
 
 -<FOV_Measurements> FOV Raw Data Measurements 
                     -10310845.SFV 0.87um channel 
@@ -164,16 +179,20 @@ FILE MANIFEST
                     -11110705.SFV 12um " 
                     -11111716.SFV 3.7um " 
 
--<lib> Various (76) .jar libraries for netCDF4, HDF5 & BEAM 
+-<lib> Various (76) .jar libraries for netCDF4, HDF5, BEAM & Orekit
 
 -<src> Source files for application 
        -Calculator.java Calculates UBT geolocation and projection 
        -Controller.java Main Class that manages parallel processing of product 
+       -FOVContour.java Contours the FOV matrix to produce interpolated extents
        -GeolocationInterpolator.java Retrieves Geolocation using AATSR FAQ 
         methodology 
        -HDFWriter.java Writes UBT geolocation, acquisition time & FOV projection
         extent to HDF5 output file 
-       -InputParameters.java Parses inputs from auxiliary data files 
+       -InputParameters.java Parses inputs from auxiliary data files
+       -NetCDF4Writer.java Writes output data in CF compliant format. Note also
+        includes measurement data and flags
+       -Orthorectifier.java Performs orbit propagation and orthorectification
        -PixelCoordinateInterpolator.java Retrieves UBT pixel scan (X&Y) 
         coordinates using TN 
        -ScanAndPixelIndicesExtractor.java Retrieves scan and pixel number
@@ -188,7 +207,9 @@ FILE MANIFEST
 -GBT-UBT-Tool.jar Java application 
 
 -jhdf.dll DLL libraries for HDF5 file creation 
--jhdf5.dll 
+-jhdf5.dll
+
+-orekit-data.zip Data bundle for the Orekit library
 
 --------------------------------------------------------------------------------
 SYSTEM REQUIREMENTS 
@@ -196,7 +217,9 @@ SYSTEM REQUIREMENTS
 Extensive system testing has not been conducted. Run time for full orbit 
 ATS_TOA_1P is ~= 1 min on minimum requirement machine. Tool has been tested on 
 Windows 64bit and Ubuntu (Linux) 64bit systems using an appropriate Linux HDF5 
-library. 
+library. Note, use of netCDF4 CF output and orthorectification are
+computationally expensive with large RAM requirements (~16 GB). Processing times
+are circa 3-4 min per full orbit product.
 
 Minimum requirements: 
 
@@ -238,9 +261,8 @@ installation of the downloaded HDF5 libraries. (> java -Xmx5g
 -Djava.library.path="xxx" -jar GBT-UBT-Tool.jar) where "xxx" is the location of 
 the installed HDF5 lib folder. 
 
-5) Choose a number of image rows to assign per thread. Suggest for a full orbit 
-TOA_1P product ~43K rows, choose 5400 rows per thread. This parameter tunes the 
-work distributed per CPU core 
+5) Choose a number of image rows to assign per thread. This parameter tunes the 
+work distributed per CPU core. Suggest initial value of 2000.
 
 6) Choose FOV reporting extent (0 - 1). This parameter alters the size of the 
 returned FOV projection depending on the intensity specified. (i.e. 0.1 -> FOV 
@@ -278,13 +300,17 @@ lower right corner.
 13) Choose HDF5 or netCDF4 CF output through appending either .h5 or .nc to 
 output filename.
 
-14) Run application by putting file locations and input parameters as Strings ""
+14) Choose whether to orthorectify the product. If true provide a path to a DEM 
+which has sufficient coverage (i.e. global) and in GeoTIFF format (.tif). If 
+false provide a dummy parameter (e.g. " ").
+
+15) Run application by putting file locations and input parameters as Strings ""
 after Java command e.g. (where ... represents continuation of same line but 
 should not be typed) >java -d64 -Xmx5g -jar GBT-UBT-Tool.jar ... 
 "./ATS_TOA_1PRUPA20040801_202807_000013052029_00085_12664_0910.N1" ... 
 "./CH1_Files/ATS_CH1_AX" "./FOV_measurements/10310845.SFV" ...
-"./ubt_output_12664.nc" "5400" "0.3" "TRUE" "Centre" "FALSE" "0.05" ... 
-"[30,100]" "[120,300]"
+"./ubt_output_12664.nc" "2000" "0.3" "TRUE" "Centre" "FALSE" "0.05" "TRUE"... 
+"./global_DEM.tif" "[30,100]" "[120,300]"
 
 --------------------------------------------------------------------------------
 AUTHORS 
@@ -325,6 +351,10 @@ Software Library and Utilities is provided in the distribution folder as
 "LICENSE_netCDF.txt". If this license is missing, see 
 <http://www.unidata.ucar.edu/software/netcdf/copyright.html>.
 
+A copy of the Copyright Notice and Statement for Orekit Low Level Space Dynamics
+Software Library and Utilities is provided in the distribution folder as 
+"LICENSE_Orekit.txt". If this license is missing, see 
+<https://www.orekit.org/license.html>
 --------------------------------------------------------------------------------
 VERSION CHANGELOG 
 --------------------------------------------------------------------------------
@@ -335,6 +365,9 @@ VERSION CHANGELOG
 1.4a 22/09/2014 User option to apply topographic corrections to tie-points
 1.4b 30/01/2015 First Beta Release to community (Limited Distribution)
 1.5  26/06/2015 Public release incorporating beta test feedback
+1.51 02/07/2015 Reduced memory overhead during netcdf4 writing
+1.52 03/07/2015 Increased speed during netcdf4 writing
+1.6  09/07/2015 User option for orthorectification
 
 --------------------------------------------------------------------------------
 ACKNOWLEDGEMENTS 

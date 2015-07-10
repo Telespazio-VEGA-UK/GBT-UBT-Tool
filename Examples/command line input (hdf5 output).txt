@@ -1,1 +1,1 @@
-java -jar GBT-UBT-Tool.jar "./ATS_TOA_1PUUPA20020803_203926_000065272008_00171_02229_5949.N1" "./CH1_Files/ATS_CH1_AX" "./FOV_measurements/10310845.SFV" "./subset_output.h5" "5000" "0.1" "true" "centre" "false" "0.05" "[30,1000]" "[120,1300]"
+java -Xmx8g -d64 -jar GBT-UBT-Tool.jar "./ATS_TOA_1PUUPA20020803_203926_000065272008_00171_02229_5949.N1" "./CH1_Files/ATS_CH1_AX" "./FOV_measurements/10310845.SFV" "./subset_output.h5" "5000" "0.1" "true" "centre" "false" "0.05" "true" "./DEM/global/gt30_global.tif" "[30,1000]" "[120,1300]"
