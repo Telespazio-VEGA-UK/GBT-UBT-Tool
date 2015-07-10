@@ -264,6 +264,7 @@ public class Controller {
                             Calculator.unGrid(tempResult, startingScanNumber, rowsPerThread, minX, maxX, s0, NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, SCAN_PIXEL_X_AND_Y_ADS_Records, GEOLOCATION_ADS_Records, scanYCoords, threadName, finalParameters, pixelProjectionMap, ephemeris, DEM);
                         } catch (Exception ex) {
                             System.out.println(threadName + " crash");
+                            ex.printStackTrace(System.out);
                             System.out.println(ex.getMessage());
                         }
                         // This commented code is for serialising the results to a temporary file and is currently unused
@@ -301,6 +302,7 @@ public class Controller {
                         Calculator.unGrid(tempResult, startingScanNumber, rowsInFinalThread, minX, maxX, s0, NADIR_VIEW_SCAN_PIX_NUM_ADS_Records, FWARD_VIEW_SCAN_PIX_NUM_ADS_Records, SCAN_PIXEL_X_AND_Y_ADS_Records, GEOLOCATION_ADS_Records, scanYCoords, threadName, finalParameters, pixelProjectionMap, ephemeris, DEM);
                     } catch (Exception ex) {
                         System.out.println(threadName + " crash");
+                        ex.printStackTrace(System.out);
                         System.out.println(ex.getMessage());
                     }
                     // This commented code is for serialising the results to a temporary file and is currently unused
