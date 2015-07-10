@@ -36,6 +36,7 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.opengis.referencing.operation.MathTransform;
 import org.orekit.bodies.BodyShape;
 import org.orekit.bodies.CelestialBodyFactory;
 import org.orekit.bodies.GeodeticPoint;
@@ -146,13 +147,13 @@ public class Orthorectifier {
     }
 
     private static float getHeightFromDEM(double latitude, double longitude, InputParameters params, Band DEM) throws IOException {
-        float height = 0;
+        float height = 32767;
         try {
             // Use beam library to retrieve the height for the given lat lon (Note two step process)
             PixelPos pixelPos = DEM.getGeoCoding().getPixelPos(new GeoPos((float) latitude, (float) longitude), null);
-            height = DEM.getSampleFloat((int) Math.floor(pixelPos.x), (int) Math.floor(pixelPos.y));
+            height = DEM.getSampleFloat((int) Math.round(pixelPos.x), (int) Math.round(pixelPos.y));
         } catch (Exception ex) {
-            System.out.println("Could not get height from DEM: " + "Lat: " + String.valueOf(latitude) + " Lon: " + String.valueOf(longitude) + " Using 0.0 metres");
+            System.out.println("Could not get height from DEM: " + "Lat: " + String.valueOf(latitude) + " Lon: " + String.valueOf(longitude));
         }
         return height;
     }
